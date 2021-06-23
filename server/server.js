@@ -5,7 +5,11 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:19006", "http://192.168.2.8:19006","http://192.168.43.43:19000/"],
+    origin: [
+      "http://localhost:19006",
+      "http://192.168.2.8:19006",
+      "http://192.168.43.43:19000/",
+    ],
   },
 });
 
@@ -19,6 +23,18 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log(socket.id);
+
+  socket.on("join-driver", (name) => {
+    socket.join("drivers");
+  });
+  socket.on("order-placed", (name, orderId, userId) => {
+    console.log("order placed ", name, orderId);
+    socket.to("drivers").emit("order", { name, orderId, userId });
+  });
+  socket.on("order-taken", (id, name) => {
+    console.log("inside server " + id + " " + name);
+    socket.to("drivers").emit("orders-changed", id, name);
+  });
 });
 
 server.listen(3000, () => {
