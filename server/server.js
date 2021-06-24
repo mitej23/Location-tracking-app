@@ -24,13 +24,15 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log(socket.id);
 
-  socket.on("join-driver", (name) => {
+  socket.on("join-driver", () => {
     socket.join("drivers");
   });
+
   socket.on("order-placed", (name, orderId, userId) => {
     console.log("order placed ", name, orderId);
     socket.to("drivers").emit("order", { name, orderId, userId });
   });
+
   socket.on("order-taken", (id, name) => {
     console.log("inside server " + id + " " + name);
     socket.to("drivers").emit("orders-changed", id, name);
