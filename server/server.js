@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
 
   socket.on("order-taken", (id, name) => {
     console.log("inside server " + id + " " + name);
-    socket.to("drivers").emit("orders-changed", id, name);
+    io.in("drivers").emit("orders-changed", id, name);
   });
 });
 
