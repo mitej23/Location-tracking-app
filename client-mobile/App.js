@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { StyleSheet, Text, TextInput, View, Button } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
@@ -44,10 +44,12 @@ export default function App() {
   let [id, setId] = useState("");
   let [isSubmitted, setSubmitted] = useState(false);
   let [orderId, setOrderId] = useState(1234);
-  let [orders, setOrders] = useState([
-    { name: "mitej", orderId: 234235, taken: false },
-    { name: "mitej", orderId: 2345, taken: false },
-  ]);
+  let [orders, setOrders] = useState([]);
+  const ordersRef = useRef(orders);
+
+  useEffect(() => {
+    ordersRef.current = orders;
+  });
 
   useEffect(() => {
     setOrderId(Math.floor(1000 + Math.random() * 9000));
@@ -56,25 +58,40 @@ export default function App() {
       setId(socket.id);
     });
 
-    socket.on("order", ({ name, orderId, userId }) => {
-      console.log("order placed ", name, orderId);
-      console.log(orders);
-      setOrders((orders) => [...orders, { name, orderId, userId }]);
+    socket.on("order", (data) => {
+      console.log("order placed ", data.name, data.orderId);
+      orderhandler(ordersRef.current, setOrders, data);
     });
 
     socket.on("orders-changed", (id, name) => {
       console.log("order taken : " + id + name);
       let insert = { name: name, orderId: id, taken: true };
       console.log(insert);
-      console.log(orders)
-      setOrders(
-        orders.map((item) => {
-          console.log(item);
-          return item.orderId === id ? insert : item;
-        })
-      );
+      console.log(ordersRef.current);
+      takenHandler(ordersRef.current, setOrders, insert, id);
     });
+
+    return () => {
+      socket.removeAllListeners();
+    };
   }, []);
+
+  useEffect(() => {
+    console.log(orders);
+  }, [orders]);
+
+  const orderhandler = (orders, setOrders, { name, orderId, userId }) => {
+    console.log(orders);
+    setOrders((orders) => [...orders, { name, orderId, taken: false }]);
+  };
+
+  const takenHandler = (orders, setOrders, insert, id) => {
+    setOrders(
+      orders.map((item) => {
+        return item.orderId === id ? insert : item;
+      })
+    );
+  };
 
   const submit = (e) => {
     e.preventDefault();
