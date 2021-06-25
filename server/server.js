@@ -33,9 +33,13 @@ io.on("connection", (socket) => {
     socket.to("drivers").emit("order", { name, orderId, userId });
   });
 
-  socket.on("order-taken", (id, name) => {
+  socket.on("order-taken", (id, name, userId) => {
     console.log("inside server " + id + " " + name);
-    io.in("drivers").emit("orders-changed", id, name);
+    io.in("drivers").emit("orders-changed", id, name, userId);
+  });
+
+  socket.on("send-address", (userId, address) => {
+    io.to(userId).emit("current-address", address);
   });
 });
 
