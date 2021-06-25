@@ -10,9 +10,9 @@ var socket = io("http://localhost:3000/", {
 });
 
 const OrdersList = ({ orders, name }) => {
-  const takeOrder = (id, name) => {
+  const takeOrder = (id, name, userId) => {
     console.log("order taken in comp");
-    socket.emit("order-taken", id, name);
+    socket.emit("order-taken", id, name, userId);
   };
   console.log(orders);
   return (
@@ -21,14 +21,14 @@ const OrdersList = ({ orders, name }) => {
         return (
           <View style={{ marginBottom: 10, backgroundColor: "#c93de2" }}>
             <Text>
-              {ord.name} {ord.orderId}
+              {ord.name} {ord.orderId} {ord.userId}
             </Text>
             {ord.taken ? (
               <Button title="Taken" />
             ) : (
               <Button
                 title="Available"
-                onPress={() => takeOrder(ord.orderId, ord.name)}
+                onPress={() => takeOrder(ord.orderId, ord.name, ord.userId)}
               />
             )}
           </View>
@@ -47,6 +47,8 @@ export default function App() {
   let [orders, setOrders] = useState([]);
   const ordersRef = useRef(orders);
 
+  const fakeAddress = useRef(3434);
+
   useEffect(() => {
     ordersRef.current = orders;
   });
@@ -63,12 +65,16 @@ export default function App() {
       orderhandler(ordersRef.current, setOrders, data);
     });
 
-    socket.on("orders-changed", (id, name) => {
+    socket.on("orders-changed", (id, name, userId) => {
       console.log("order taken : " + id + name);
-      let insert = { name: name, orderId: id, taken: true };
+      let insert = { name: name, orderId: id, taken: true, userId };
       console.log(insert);
       console.log(ordersRef.current);
-      takenHandler(ordersRef.current, setOrders, insert, id);
+      takenHandler(ordersRef.current, setOrders, insert, id, userId);
+    });
+
+    socket.on("current-address", (address) => {
+      console.log(address + "********");
     });
 
     return () => {
@@ -82,15 +88,17 @@ export default function App() {
 
   const orderhandler = (orders, setOrders, { name, orderId, userId }) => {
     console.log(orders);
-    setOrders((orders) => [...orders, { name, orderId, taken: false }]);
+    setOrders((orders) => [...orders, { name, orderId, taken: false, userId }]);
   };
 
-  const takenHandler = (orders, setOrders, insert, id) => {
+  const takenHandler = (orders, setOrders, insert, id, userId) => {
     setOrders(
       orders.map((item) => {
         return item.orderId === id ? insert : item;
       })
     );
+    console.log("taken-handler: " + userId);
+    addToDeliveryRoom(userId);
   };
 
   const submit = (e) => {
@@ -111,6 +119,15 @@ export default function App() {
     console.log("order placed", name, orderId);
     socket.emit("order-placed", name, orderId, id);
     setOrderId(Math.floor(1000 + Math.random() * 9000));
+  };
+
+  const addToDeliveryRoom = (userId) => {
+    alert("Now you will receive address of the delvery man");
+
+    setInterval(function () {
+      fakeAddress.current = Math.floor(1000 + Math.random() * 9000);
+      socket.emit("send-address", userId, fakeAddress.current);
+    }, 2000);
   };
 
   return (
