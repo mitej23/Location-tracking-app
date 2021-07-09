@@ -9,6 +9,8 @@ const io = new Server(server, {
       "http://localhost:19006",
       "http://192.168.2.8:19006",
       "http://192.168.43.43:19000/",
+      "http://localhost:19005",
+      "http://192.168.43.43:19005",
     ],
   },
 });
