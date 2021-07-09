@@ -3,8 +3,12 @@ import { StyleSheet, Text, TextInput, View, Button } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 import io from "socket.io-client";
+
+
 //Don't usee localhost while testing on phone
-var socket = io("http://localhost:3000/", {
+//Note: The ip address changes everytime on hotspot make sure to change it everytime
+
+var socket = io("http://192.168.43.43:3000/", {
   transports: ["websocket"],
   jsonp: false,
 });
